@@ -7,7 +7,7 @@ export const CONFIG = {
   BALL_IMAGES: {} as Record<number, string>,
 
   /** 預設結算文字 */
-  RESULT: { title: '阿淵淵欠小糖', unit: '下' },
+  RESULT: { title: '恭喜你獲得', unit: '分' },
 };
 
 /** 背景圖路徑（public/assets/） */
