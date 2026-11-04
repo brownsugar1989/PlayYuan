@@ -42,8 +42,7 @@ export const ballImage = (n: number) => (ready(ballImgs[n]) ? ballImgs[n] : null
 const edgeCache: Record<number, string> = {};
 
 /**
- * 偵測球底部邊緣的顏色，給氣球結使用：
- * 有圖片時取圖片底邊的平均色，沒有圖片時使用該等級的預設顏色。
+ * 取球身圖片主體最底部的不透明像素平均色，供球結與邊框共用。
  */
 export function edgeColor(n: number, K: number): string {
   const base = levelColor(n, K);
@@ -56,10 +55,20 @@ export function edgeColor(n: number, K: number): string {
     const g = c.getContext('2d')!;
     const s = Math.max(32 / im.naturalWidth, 32 / im.naturalHeight);
     g.drawImage(im, 16 - (im.naturalWidth * s) / 2, 16 - (im.naturalHeight * s) / 2, im.naturalWidth * s, im.naturalHeight * s);
-    const d = g.getImageData(14, 28, 5, 3).data;
+    const pixels = g.getImageData(0, 0, 32, 32).data;
+    let bottom = -1;
+    for (let y = 31; y >= 0; y--) {
+      let count = 0;
+      for (let x = 0; x < 32; x++) if (pixels[(y * 32 + x) * 4 + 3] > 160) count++;
+      if (count >= 3) { bottom = y; break; }
+    }
+    if (bottom < 0) return (edgeCache[n] = base);
     let r = 0, gr = 0, b = 0, k = 0;
-    for (let i = 0; i < d.length; i += 4) {
-      if (d[i + 3] > 128) { r += d[i]; gr += d[i + 1]; b += d[i + 2]; k++; }
+    for (let y = Math.max(0, bottom - 2); y <= bottom; y++) {
+      for (let x = 0; x < 32; x++) {
+        const i = (y * 32 + x) * 4;
+        if (pixels[i + 3] > 160) { r += pixels[i]; gr += pixels[i + 1]; b += pixels[i + 2]; k++; }
+      }
     }
     return (edgeCache[n] = k ? `rgb(${Math.round(r / k)},${Math.round(gr / k)},${Math.round(b / k)})` : base);
   } catch {

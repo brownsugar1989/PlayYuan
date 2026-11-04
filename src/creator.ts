@@ -1,10 +1,12 @@
 import './creator.css';
 import { STORAGE_API_URL } from './storage-config';
+import { editPhoto } from './photo-editor';
 
 const MAX_LEVEL = 10;
 const MAX_SOURCE_BYTES = 20 * 1024 * 1024;
 const OWNED_LINKS_KEY = 'playyuan:owned-game-links:v1';
 const imageFiles = new Map<number, File>();
+const processedImages = new Map<number, Blob>();
 const objectUrls = new Map<number, string>();
 
 const grid = document.querySelector<HTMLDivElement>('#level-images')!;
@@ -58,10 +60,33 @@ function makeLevelCards() {
       const objectUrl = URL.createObjectURL(file);
       objectUrls.set(level, objectUrl);
       imageFiles.set(level, file);
+      processedImages.set(level, file);
       preview.src = objectUrl;
       removeButton.hidden = false;
       setStatus('圖片只在目前瀏覽器預覽；按「生成網址」後才會加密上傳。');
+      void openEditor();
     });
+
+    const editButton = document.createElement('button');
+    editButton.type = 'button';
+    editButton.className = 'secondary-button edit-image';
+    editButton.textContent = '裁切／拉伸預覽';
+    editButton.hidden = true;
+    editButton.addEventListener('click', () => void openEditor());
+
+    async function openEditor() {
+      const file = imageFiles.get(level);
+      if (!file) return;
+      const edited = await editPhoto(file, level, setStatus);
+      if (!edited) return;
+      processedImages.set(level, edited);
+      const old = objectUrls.get(level);
+      if (old) URL.revokeObjectURL(old);
+      const url = URL.createObjectURL(edited);
+      objectUrls.set(level, url);
+      preview.src = url;
+      setStatus(`第 ${level} 級圖片已套用裁切與氣球效果；生成前仍只保存在此瀏覽器。`);
+    }
 
     const removeButton = document.createElement('button');
     removeButton.type = 'button';
@@ -73,12 +98,15 @@ function makeLevelCards() {
       if (previousUrl) URL.revokeObjectURL(previousUrl);
       objectUrls.delete(level);
       imageFiles.delete(level);
+      processedImages.delete(level);
       preview.removeAttribute('src');
       input.value = '';
       removeButton.hidden = true;
+      editButton.hidden = true;
     });
 
-    controls.append(label, input, removeButton);
+    input.addEventListener('change', () => { editButton.hidden = !input.files?.length; });
+    controls.append(label, input, editButton, removeButton);
     card.append(preview, controls);
     grid.append(card);
   }
@@ -114,7 +142,7 @@ function blobToDataUrl(blob: Blob): Promise<string> {
   });
 }
 
-async function compressImage(file: File) {
+async function compressImage(file: Blob) {
   const bitmap = await createImageBitmap(file);
   try {
     const scale = Math.min(1, 512 / Math.max(bitmap.width, bitmap.height));
@@ -162,7 +190,7 @@ async function generateShare(event: SubmitEvent) {
   setStatus('正在處理圖片並於瀏覽器加密…');
   try {
     const images: Record<number, string> = {};
-    for (const [level, file] of imageFiles) images[level] = await compressImage(file);
+    for (const [level, image] of processedImages) images[level] = await compressImage(image);
     const payload = {
       version: 1,
       images,

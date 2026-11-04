@@ -62,7 +62,7 @@ export class Renderer {
 
     // 氣球結
     c.fillStyle = edgeColor(n, K);
-    c.strokeStyle = 'rgba(110,40,80,.6)';
+    c.strokeStyle = edgeColor(n, K);
     c.lineWidth = 2;
     c.beginPath();
     c.moveTo(x, y + r * 0.96);
@@ -102,7 +102,7 @@ export class Renderer {
 
     // 外框
     c.lineWidth = 2;
-    c.strokeStyle = 'rgba(110,40,80,.6)';
+    c.strokeStyle = edgeColor(n, K);
     c.beginPath();
     c.arc(x, y, r, 0, Math.PI * 2);
     c.stroke();
@@ -125,7 +125,7 @@ export class Renderer {
     c.fill();
 
     // 鑽石閃的星芒
-    if (n >= K) {
+    if (n >= K && !im) {
       c.fillStyle = '#fff';
       const T = performance.now() / 500;
       for (let i = 0; i < 3; i++) {
