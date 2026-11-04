@@ -12,16 +12,17 @@ async function readResult(response: Response): Promise<LeaderboardResult> {
   return { bestScore: body.bestScore! };
 }
 
-export async function getBestScore(gameId: string): Promise<number> {
-  const response = await fetch(`${STORAGE_API_URL}/games/${gameId}/leaderboard`);
+export async function getBestScore(gameId: string, maxLevel: number): Promise<number> {
+  const query = new URLSearchParams({ maxLevel: String(maxLevel) });
+  const response = await fetch(`${STORAGE_API_URL}/games/${gameId}/leaderboard?${query}`);
   return (await readResult(response)).bestScore;
 }
 
-export async function submitScore(gameId: string, score: number): Promise<number> {
+export async function submitScore(gameId: string, score: number, maxLevel: number): Promise<number> {
   const response = await fetch(`${STORAGE_API_URL}/games/${gameId}/score`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ score }),
+    body: JSON.stringify({ score, maxLevel }),
   });
   return (await readResult(response)).bestScore;
 }
