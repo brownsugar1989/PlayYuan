@@ -69,6 +69,21 @@ export class Renderer {
     c.shadowBlur = 6;
     c.shadowOffsetY = 2;
 
+    const im = ballImage(n);
+    // 有照片的最高級球只加一圈非常淡的緩慢呼吸光暈；星芒仍不顯示。
+    if (n >= K && im) {
+      const pulse = 0.045 + ((Math.sin(performance.now() / 1100) + 1) / 2) * 0.025;
+      const halo = c.createRadialGradient(x, y, r * 0.78, x, y, r * 1.52);
+      halo.addColorStop(0, 'rgba(255,228,249,.4)');
+      halo.addColorStop(0.42, 'rgba(225,201,255,1)');
+      halo.addColorStop(1, 'rgba(225,201,255,0)');
+      c.save();
+      c.globalAlpha = alpha * pulse;
+      c.fillStyle = halo;
+      c.fillRect(x - r * 1.52, y - r * 1.52, r * 3.04, r * 3.04);
+      c.restore();
+    }
+
     // 氣球結
     c.fillStyle = edgeColor(n, K);
     c.strokeStyle = edgeColor(n, K);
@@ -98,7 +113,6 @@ export class Renderer {
     c.shadowColor = 'transparent';
 
     // 圖片（裁成圓形，cover 填滿）
-    const im = ballImage(n);
     if (im) {
       c.save();
       c.beginPath();
