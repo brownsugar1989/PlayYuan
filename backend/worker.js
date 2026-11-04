@@ -3,6 +3,15 @@ const RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 const ID_PATTERN = /^[a-f0-9]{32}$/i;
 const BASE64URL_PATTERN = /^[A-Za-z0-9_-]+$/;
 
+function leaderboardKeys(id) {
+  // Include the pre-level key so any legacy record is cleaned up as well.
+  return [`leaderboards/${id}`, ...Array.from({ length: 7 }, (_, index) => `leaderboards/${id}/${index + 4}`)];
+}
+
+function validMaxLevel(value) {
+  return Number.isInteger(value) && value >= 4 && value <= 10;
+}
+
 function allowedOrigin(request, env) {
   const origin = request.headers.get('Origin') || '';
   const allowed = (env.ALLOWED_ORIGINS || '').split(',').map((value) => value.trim());
@@ -61,7 +70,7 @@ async function activeGame(env, id) {
   const object = await env.GAMES.head(key);
   if (!object) return 404;
   if (Number(object.customMetadata?.expiresAt || 0) <= Date.now()) {
-    await env.GAMES.delete([key, `leaderboards/${id}`]);
+    await env.GAMES.delete([key, ...leaderboardKeys(id)]);
     return 410;
   }
   return 0;
@@ -106,16 +115,16 @@ export default {
     const id = match[1].toLowerCase();
     const subroute = (match[2] || '').toLowerCase();
     const key = `games/${id}`;
-    const leaderboardKey = `leaderboards/${id}`;
-
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: headersFor(origin) });
 
     if (subroute === 'leaderboard') {
       if (request.method !== 'GET') return json({ error: 'Method not allowed.' }, 405, origin);
+      const maxLevel = Number(url.searchParams.get('maxLevel'));
+      if (!validMaxLevel(maxLevel)) return json({ error: 'Invalid max level.' }, 400, origin);
       const status = await activeGame(env, id);
       if (status === 404) return json({ error: 'Game not found.' }, 404, origin);
       if (status === 410) return json({ error: 'This game link has expired.' }, 410, origin);
-      return json({ bestScore: await readBestScore(env, leaderboardKey) }, 200, origin);
+      return json({ bestScore: await readBestScore(env, `leaderboards/${id}/${maxLevel}`) }, 200, origin);
     }
 
     if (subroute === 'score') {
@@ -127,12 +136,14 @@ export default {
       let body;
       try { body = JSON.parse(bodyText); } catch { return json({ error: 'Invalid score.' }, 400, origin); }
       const score = body?.score;
+      const maxLevel = body?.maxLevel;
       if (!Number.isSafeInteger(score) || score < 0) return json({ error: 'Invalid score.' }, 400, origin);
+      if (!validMaxLevel(maxLevel)) return json({ error: 'Invalid max level.' }, 400, origin);
       const status = await activeGame(env, id);
       if (status === 404) return json({ error: 'Game not found.' }, 404, origin);
       if (status === 410) return json({ error: 'This game link has expired.' }, 410, origin);
       try {
-        return json({ bestScore: await submitBestScore(env, leaderboardKey, score) }, 200, origin);
+        return json({ bestScore: await submitBestScore(env, `leaderboards/${id}/${maxLevel}`, score) }, 200, origin);
       } catch {
         return json({ error: 'Could not update the leaderboard. Please retry.' }, 503, origin);
       }
@@ -162,7 +173,7 @@ export default {
       const object = await env.GAMES.get(key);
       if (!object) return json({ error: 'Game not found.' }, 404, origin);
       if (Number(object.customMetadata?.expiresAt || 0) <= Date.now()) {
-        await env.GAMES.delete([key, leaderboardKey]);
+        await env.GAMES.delete([key, ...leaderboardKeys(id)]);
         return json({ error: 'This game link has expired.' }, 410, origin);
       }
       const headers = headersFor(origin);
@@ -178,7 +189,7 @@ export default {
         return json({ error: 'Delete token is invalid.' }, 403, origin);
       }
       await env.GAMES.delete(key);
-      await env.GAMES.delete(leaderboardKey);
+      await env.GAMES.delete(leaderboardKeys(id));
       return new Response(null, { status: 204, headers: headersFor(origin) });
     }
 
@@ -194,7 +205,7 @@ export default {
           .filter((object) => Number(object.customMetadata?.expiresAt || 0) <= Date.now())
           .map((object) => object.key.slice('games/'.length));
         if (expiredIds.length) {
-          const keys = expiredIds.flatMap((id) => [`games/${id}`, `leaderboards/${id}`]);
+          const keys = expiredIds.flatMap((id) => [`games/${id}`, ...leaderboardKeys(id)]);
           await env.GAMES.delete(keys);
         }
         cursor = page.truncated ? page.cursor : undefined;
