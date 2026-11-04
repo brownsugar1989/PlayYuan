@@ -70,20 +70,6 @@ export class Renderer {
     c.shadowOffsetY = 2;
 
     const im = ballImage(n);
-    // 有照片的最高級球只加一圈非常淡的緩慢呼吸光暈；星芒仍不顯示。
-    if (n >= K && im) {
-      const pulse = 0.045 + ((Math.sin(performance.now() / 1100) + 1) / 2) * 0.025;
-      const halo = c.createRadialGradient(x, y, r * 0.78, x, y, r * 1.52);
-      halo.addColorStop(0, 'rgba(255,228,249,.4)');
-      halo.addColorStop(0.42, 'rgba(225,201,255,1)');
-      halo.addColorStop(1, 'rgba(225,201,255,0)');
-      c.save();
-      c.globalAlpha = alpha * pulse;
-      c.fillStyle = halo;
-      c.fillRect(x - r * 1.52, y - r * 1.52, r * 3.04, r * 3.04);
-      c.restore();
-    }
-
     // 氣球結
     c.fillStyle = edgeColor(n, K);
     c.strokeStyle = edgeColor(n, K);
@@ -120,6 +106,27 @@ export class Renderer {
       c.clip();
       const s = Math.max((2 * r) / im.naturalWidth, (2 * r) / im.naturalHeight);
       c.drawImage(im, x - (im.naturalWidth * s) / 2, y - (im.naturalHeight * s) / 2, im.naturalWidth * s, im.naturalHeight * s);
+      c.restore();
+    }
+
+    // 在照片完成後繪製淡淡的流動外暈；環帶位於照片圓形之外，不遮住主體。
+    if (n >= K && im) {
+      const phase = (performance.now() / 2400) % 1;
+      const width = Math.max(2.5, r * 0.12);
+      c.save();
+      c.globalAlpha = alpha * 0.28;
+      c.translate(x, y);
+      c.rotate(phase * Math.PI * 2);
+      const flow = c.createLinearGradient(-r * 1.5, -r * 1.5, r * 1.5, r * 1.5);
+      flow.addColorStop(0, 'rgba(233,211,255,.04)');
+      flow.addColorStop(0.42, 'rgba(233,211,255,.12)');
+      flow.addColorStop(0.56, 'rgba(255,248,255,.24)');
+      flow.addColorStop(1, 'rgba(233,211,255,.04)');
+      c.strokeStyle = flow;
+      c.lineWidth = width;
+      c.beginPath();
+      c.arc(0, 0, r + width * 0.65, 0, Math.PI * 2);
+      c.stroke();
       c.restore();
     }
 
