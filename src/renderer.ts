@@ -121,24 +121,23 @@ export class Renderer {
       c.restore();
     }
 
-    // 在照片完成後繪製淡淡的流動外暈；環帶位於照片圓形之外，不遮住主體。
+    // 最高級照片球上的流動淡光：裁在球體內，低透明度疊在照片上。
     if (n >= K && im) {
-      const phase = (performance.now() / 2400) % 1;
-      const width = Math.max(2.5, r * 0.12);
+      const phase = (performance.now() / 2600) % 1;
       c.save();
-      c.globalAlpha = alpha * 0.28;
+      c.beginPath();
+      c.arc(x, y, r, 0, Math.PI * 2);
+      c.clip();
+      c.globalAlpha = alpha * 0.24;
       c.translate(x, y);
       c.rotate(phase * Math.PI * 2);
-      const flow = c.createLinearGradient(-r * 1.5, -r * 1.5, r * 1.5, r * 1.5);
-      flow.addColorStop(0, 'rgba(233,211,255,.04)');
-      flow.addColorStop(0.42, 'rgba(233,211,255,.12)');
-      flow.addColorStop(0.56, 'rgba(255,248,255,.24)');
-      flow.addColorStop(1, 'rgba(233,211,255,.04)');
-      c.strokeStyle = flow;
-      c.lineWidth = width;
-      c.beginPath();
-      c.arc(0, 0, r + width * 0.65, 0, Math.PI * 2);
-      c.stroke();
+      const flow = c.createLinearGradient(-r, -r, r, r);
+      flow.addColorStop(0, 'rgba(233,211,255,0)');
+      flow.addColorStop(0.42, 'rgba(233,211,255,.22)');
+      flow.addColorStop(0.56, 'rgba(255,248,255,.34)');
+      flow.addColorStop(1, 'rgba(233,211,255,0)');
+      c.fillStyle = flow;
+      c.fillRect(-r, -r, 2 * r, 2 * r);
       c.restore();
     }
 
@@ -354,7 +353,11 @@ export class Renderer {
           : this.bestScore === null
             ? '排名讀取中…'
             : `目前最高得主擁有 ${this.bestScore.toLocaleString('en-US')} 分`;
-        this.fitCenteredText(rankText, W / 2, 425, 16, W - 28);
+        c.fillStyle = '#fff';
+        c.font = `400 12px ${FONT}`;
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        c.fillText(rankText, W / 2, 425, W - 28);
       }
     }
   }
