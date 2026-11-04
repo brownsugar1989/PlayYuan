@@ -18,11 +18,18 @@ async function start() {
   const game = new Game();
   const renderer = new Renderer(cv, customization?.result, Boolean(customization?.id));
 
-  if (customization?.id) {
-    void getBestScore(customization.id)
-      .then((score) => renderer.setBestScore(score))
-      .catch(() => renderer.setLeaderboardError());
-  }
+  let leaderboardLevel = game.K;
+  const refreshLeaderboard = (maxLevel: number) => {
+    if (!customization?.id) return;
+    void getBestScore(customization.id, maxLevel)
+      .then((score) => {
+        if (leaderboardLevel === maxLevel) renderer.setBestScore(score);
+      })
+      .catch(() => {
+        if (leaderboardLevel === maxLevel) renderer.setLeaderboardError();
+      });
+  };
+  if (customization?.id) refreshLeaderboard(leaderboardLevel);
 
   bindInput(cv, {
     onDown: (x, y) => {
@@ -57,10 +64,19 @@ async function start() {
     const dt = Math.min(50, now - last);
     last = now;
     game.update(dt);
+    if (customization?.id && leaderboardLevel !== game.K) {
+      leaderboardLevel = game.K;
+      refreshLeaderboard(leaderboardLevel);
+    }
     if (game.state === 'over' && previousState !== 'over' && customization?.id) {
-      void submitScore(customization.id, game.score)
-        .then((score) => renderer.setBestScore(score))
-        .catch(() => renderer.setLeaderboardError());
+      const maxLevel = game.K;
+      void submitScore(customization.id, game.score, maxLevel)
+        .then((score) => {
+          if (leaderboardLevel === maxLevel) renderer.setBestScore(score);
+        })
+        .catch(() => {
+          if (leaderboardLevel === maxLevel) renderer.setLeaderboardError();
+        });
     }
     previousState = game.state;
     renderer.draw(game);
