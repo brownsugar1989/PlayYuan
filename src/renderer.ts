@@ -49,9 +49,14 @@ export class Renderer {
   /** 9:16 內部畫布等比縮放並考慮高解析度螢幕 */
   private fit() {
     const { W, H } = LAYOUT;
-    const s = Math.min(innerWidth / W, innerHeight / H);
-    // Include visual viewport zoom so pinch-zoomed mobile canvases stay crisp.
-    const d = Math.min(4, Math.max(1, (window.devicePixelRatio || 1) * (window.visualViewport?.scale || 1)));
+    const viewportWidth = document.documentElement.clientWidth || innerWidth;
+    const viewportHeight = document.documentElement.clientHeight || innerHeight;
+    const s = Math.min(viewportWidth / W, viewportHeight / H);
+    // Use the device pixel ratio directly. visualViewport.scale describes page zoom,
+    // which can differ between links and otherwise reduce the canvas backing resolution.
+    const touchScreen = window.matchMedia('(pointer: coarse)').matches;
+    const minimumDpr = touchScreen ? 2 : 1;
+    const d = Math.min(4, Math.max(minimumDpr, window.devicePixelRatio || 1));
     this.cv.style.width = W * s + 'px';
     this.cv.style.height = H * s + 'px';
     this.cv.width = Math.max(1, Math.ceil(W * s * d));
