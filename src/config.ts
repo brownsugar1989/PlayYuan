@@ -1,16 +1,12 @@
-/** ===== 開發者設定：這三項可以自行調整 ===== */
-export const CONFIG = {
-  /** 1. 預設最高等級（使用者可在遊戲中調整，範圍 4 ~ 10） */
-  MAX_LEVEL: 5,
+/** 玩家每次初次開啟遊戲時的最高等級預設值；遊戲上限固定為 10。 */
+export const DEFAULT_PLAYER_MAX_LEVEL = 5;
 
-  /**
-   * 2. 等級球圖片：等級 → 圖片路徑（圖片放在 public/assets/balls/）。
-   * 沒填的等級使用預設顏色。例如：
-   * { 1: 'assets/balls/1.webp', 2: 'assets/balls/2.webp' }
-   */
+/** ===== 遊戲預設外觀與結算文字 ===== */
+export const CONFIG = {
+  /** 預設球圖；客製化遊戲圖片由加密分享設定提供。 */
   BALL_IMAGES: {} as Record<number, string>,
 
-  /** 3. 結算畫面文字（預設樣式為 { title: '遊戲結束', unit: '分' }） */
+  /** 預設結算文字 */
   RESULT: { title: '阿淵淵欠小糖', unit: '下' },
 };
 

@@ -1,0 +1,43 @@
+:root { color: #49263a; background: #fbf4f7; font-family: "Noto Sans TC", system-ui, sans-serif; font-synthesis: none; }
+* { box-sizing: border-box; }
+body.creator-page { margin: 0; min-height: 100vh; overflow: auto; touch-action: auto; -webkit-user-select: auto; user-select: auto; overscroll-behavior: auto; }
+.creator-shell { width: min(920px, calc(100% - 32px)); margin: 0 auto; padding: 24px 0 48px; }
+.back-link { color: #853c64; text-decoration: none; font-size: 14px; font-weight: 700; }
+.creator-header { padding: 34px 0 22px; }
+.eyebrow { color: #a25d7e; font-size: 11px; font-weight: 800; letter-spacing: .14em; margin: 0 0 8px; }
+h1,h2,p { margin-top: 0; }
+h1 { font-size: clamp(28px, 5vw, 40px); line-height: 1.2; margin: 0 0 10px; }
+.creator-header p:last-child { color: #79536a; margin: 0; }
+.privacy-note { display: grid; gap: 4px; border: 1px solid #e8bdd0; background: #fff8fb; border-radius: 14px; padding: 14px 16px; margin-bottom: 18px; font-size: 13px; line-height: 1.65; }
+.privacy-note strong { color: #8d365f; }
+.panel { background: #fff; border: 1px solid #efdce5; border-radius: 20px; padding: clamp(18px, 3vw, 28px); margin: 16px 0; box-shadow: 0 8px 28px rgba(111,46,78,.05); }
+.section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.section-heading h2 { font-size: 20px; margin: 0; }
+.section-help { color: #806b78; font-size: 13px; line-height: 1.65; margin: 10px 0 18px; }
+.optional-tag { border-radius: 999px; background: #f8eaf0; color: #843e62; padding: 5px 10px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.level-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
+.level-card { border: 1px solid #f0dfe7; border-radius: 14px; padding: 12px; display: grid; grid-template-columns: 76px 1fr; gap: 12px; align-items: center; min-width: 0; }
+.level-preview { width: 76px; height: 76px; object-fit: cover; border-radius: 50%; background: linear-gradient(145deg,#fff,#f1d8e4); border: 2px solid #f0d1df; }
+.level-card label { display: block; font-weight: 800; font-size: 14px; margin-bottom: 8px; }
+.level-card input[type=file] { width: 100%; font-size: 12px; }
+.field-label { display: block; font-size: 13px; font-weight: 800; margin: 16px 0 7px; }
+.field-label small { color: #826d79; font-weight: 500; margin-left: 6px; }
+input[type=text], .copy-row input { width: 100%; min-width: 0; border: 1px solid #dfc9d3; border-radius: 10px; padding: 12px 13px; color: #49263a; background: #fff; font: inherit; font-size: 14px; }
+input:focus { outline: 3px solid #efc9da; border-color: #bd7896; }
+.result-preview { display: grid; justify-items: center; gap: 7px; background: #8f4168; color: #fff; text-align: center; border-radius: 16px; padding: 20px 12px; margin-top: 18px; }
+.preview-caption { opacity: .75; font-size: 11px; }
+.result-preview strong { font-size: 20px; }
+.result-preview span:last-child { font-size: 16px; }
+.creator-actions { padding: 10px 0; }
+.primary-button,.secondary-button,.delete-button { border: 0; border-radius: 11px; padding: 12px 18px; font: inherit; font-weight: 800; cursor: pointer; }
+.primary-button { width: 100%; background: #8f4168; color: #fff; font-size: 16px; }
+.primary-button:disabled { opacity: .6; cursor: wait; }
+.secondary-button { background: #f2e1e9; color: #6c3150; white-space: nowrap; }
+.delete-button { color: #963c4b; background: transparent; padding-left: 0; font-size: 13px; }
+.status { min-height: 22px; color: #674a5b; font-size: 13px; text-align: center; margin: 9px 0; }
+.status.error { color: #a1243e; }
+.share-result { background: #fff; border: 1px solid #e7d2dc; border-radius: 16px; padding: 16px; }
+.copy-row { display: flex; gap: 8px; align-items: center; }
+.copy-row input { font-size: 12px; }
+footer { text-align: center; color: #917d89; font-size: 12px; line-height: 1.6; padding: 12px; }
+@media (max-width: 560px) { .creator-shell { width: min(100% - 24px, 920px); padding-top: 16px; } .creator-header { padding-top: 24px; } .level-grid { grid-template-columns: 1fr; } .copy-row { align-items: stretch; flex-direction: column; } .copy-row input { min-height: 44px; } }

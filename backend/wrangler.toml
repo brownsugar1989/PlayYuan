@@ -1,0 +1,17 @@
+name = "playyuan-game-storage"
+main = "worker.js"
+compatibility_date = "2026-11-04"
+workers_dev = true
+
+[observability]
+enabled = true
+
+[[r2_buckets]]
+binding = "GAMES"
+bucket_name = "playyuan-games"
+
+[triggers]
+crons = ["17 3 * * *"]
+
+[vars]
+ALLOWED_ORIGINS = "https://brownsugar1989.github.io,http://localhost:5173"

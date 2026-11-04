@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f5d4e0" />
+  <title>製作專屬推推合成球</title>
+</head>
+<body class="creator-page">
+  <main class="creator-shell">
+    <a class="back-link" href="./">← 回到遊戲</a>
+    <header class="creator-header">
+      <p class="eyebrow">PLAYYUAN · CREATOR</p>
+      <h1>製作專屬推推合成球</h1>
+      <p>逐級挑選圖片、編輯結算文字，完成後產生一條專屬遊戲網址。</p>
+    </header>
+
+    <section class="privacy-note" aria-label="照片隱私說明">
+      <strong>照片隱私</strong>
+      <span>圖片會先在你的瀏覽器縮小並加密，再上傳保存 30 天。儲存服務只收到密文；完整分享網址包含解密金鑰，請只傳給你信任的人。</span>
+    </section>
+
+    <form id="creator-form">
+      <section class="panel">
+        <div class="section-heading">
+          <div><p class="eyebrow">01 · BALL IMAGES</p><h2>選擇各級圖片</h2></div>
+          <span class="optional-tag">全部選填</span>
+        </div>
+        <p class="section-help">圖片只會用在你上傳的等級；留空的等級使用遊戲預設顏色。最高可設定到第 10 級，由玩家在遊戲中自行選擇本局的最高等級。</p>
+        <div id="level-images" class="level-grid"></div>
+      </section>
+
+      <section class="panel">
+        <div class="section-heading">
+          <div><p class="eyebrow">02 · RESULT TEXT</p><h2>設計結算文字</h2></div>
+        </div>
+        <label class="field-label" for="line1">第一行</label>
+        <input id="line1" name="line1" maxlength="80" value="恭喜你完成挑戰！" required />
+        <label class="field-label" for="line2">第二行 <small>用 {{score}} 放入玩家分數</small></label>
+        <input id="line2" name="line2" maxlength="100" value="你的分數是 {{score}} 分" required />
+        <div class="result-preview" aria-live="polite">
+          <span class="preview-caption">結算預覽</span>
+          <strong id="preview-line1">恭喜你完成挑戰！</strong>
+          <span id="preview-line2">你的分數是 12,345 分</span>
+        </div>
+      </section>
+
+      <section class="creator-actions">
+        <button id="generate" class="primary-button" type="submit">生成網址</button>
+        <p id="status" class="status" role="status"></p>
+        <div id="share-result" class="share-result" hidden>
+          <label class="field-label" for="share-url">你的客製化遊戲網址</label>
+          <div class="copy-row"><input id="share-url" readonly /><button id="copy-link" type="button" class="secondary-button">複製連結</button></div>
+          <p id="expiry-note" class="section-help"></p>
+          <button id="delete-link" type="button" class="delete-button">刪除這個客製化版本</button>
+        </div>
+      </section>
+    </form>
+    <footer>圖片不會放入公開 GitHub 儲存庫。刪除產生的版本後，連結會立即失效。</footer>
+  </main>
+  <script type="module" src="./src/creator.ts"></script>
+</body>
+</html>

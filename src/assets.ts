@@ -7,10 +7,31 @@ export const bgImage = new Image();
 bgImage.src = url(BG_IMAGE);
 
 const ballImgs: Record<number, HTMLImageElement> = {};
-for (const [lv, path] of Object.entries(CONFIG.BALL_IMAGES)) {
-  const img = new Image();
-  img.src = url(path);
-  ballImgs[Number(lv)] = img;
+function loadDefaultBallImages() {
+  for (const [lv, path] of Object.entries(CONFIG.BALL_IMAGES)) {
+    const img = new Image();
+    img.src = url(path);
+    ballImgs[Number(lv)] = img;
+  }
+}
+loadDefaultBallImages();
+
+/** Apply browser-decrypted images for a generated game. Unfilled levels keep defaults. */
+export function setCustomBallImages(images: Record<number, string>) {
+  for (const key of Object.keys(ballImgs)) delete ballImgs[Number(key)];
+  for (const [lv, path] of Object.entries(CONFIG.BALL_IMAGES)) {
+    const img = new Image();
+    img.src = url(path);
+    ballImgs[Number(lv)] = img;
+  }
+  for (const [lv, src] of Object.entries(images)) {
+    const n = Number(lv);
+    if (!Number.isInteger(n) || n < 1 || n > 10) continue;
+    const img = new Image();
+    img.src = src;
+    ballImgs[n] = img;
+  }
+  for (const key of Object.keys(edgeCache)) delete edgeCache[Number(key)];
 }
 
 export const ready = (i?: HTMLImageElement) => !!(i && i.complete && i.naturalWidth);

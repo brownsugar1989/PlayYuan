@@ -1,5 +1,5 @@
 import Matter from 'matter-js';
-import { CONFIG, LAYOUT, TUNING } from './config';
+import { DEFAULT_PLAYER_MAX_LEVEL, LAYOUT, TUNING } from './config';
 import { radius } from './levels';
 import type { Ball } from './types';
 
@@ -12,7 +12,7 @@ export class PhysicsWorld {
   balls: Ball[] = [];
   /** 待合成的球對（同級、尚未排隊、不在冷卻中） */
   queue: [Ball, Ball][] = [];
-  maxLevel = CONFIG.MAX_LEVEL;
+  maxLevel = DEFAULT_PLAYER_MAX_LEVEL;
 
   constructor() {
     this.engine.gravity.x = 0;

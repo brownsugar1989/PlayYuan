@@ -1,4 +1,4 @@
-import { CONFIG, TUNING } from './config';
+import { DEFAULT_PLAYER_MAX_LEVEL, TUNING } from './config';
 import { checkGameOver } from './gameover';
 import { Launcher } from './launcher';
 import { processMerges } from './merge';
@@ -12,7 +12,7 @@ function getSavedMaxLevel() {
     const saved = Number(localStorage.getItem(MAX_LEVEL_KEY));
     if (Number.isInteger(saved) && saved >= 4 && saved <= 10) return saved;
   } catch { /* local storage can be unavailable in private browsing */ }
-  return Math.max(4, Math.min(10, CONFIG.MAX_LEVEL));
+  return Math.max(4, Math.min(10, DEFAULT_PLAYER_MAX_LEVEL));
 }
 
 /** 遊戲狀態與主更新：串起物理、發射器、合成、結束判定 */

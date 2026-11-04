@@ -1,3 +1,4 @@
 html, body { margin: 0; height: 100%; overflow: hidden; background: #f2c4d2; touch-action: none; -webkit-user-select: none; user-select: none; overscroll-behavior: none; }
 #bg { position: fixed; inset: -30px; background-size: cover; background-position: center; filter: blur(16px); }
 #c { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); touch-action: none; display: block; }
+#share-error { position: fixed; z-index: 5; left: 50%; top: 50%; transform: translate(-50%,-50%); width: min(360px,calc(100% - 32px)); border: 1px solid #e7bdd0; border-radius: 16px; padding: 20px; color: #672b4d; background: #fff8fb; box-shadow: 0 12px 36px #51213c33; text-align: center; font: 600 15px/1.6 system-ui,sans-serif; }

@@ -5,11 +5,22 @@ import type { Game } from './game';
 
 const FONT = '"PingFang TC","Noto Sans TC",system-ui,sans-serif';
 
+export interface ResultText {
+  line1: string;
+  line2: string;
+}
+
 /** 畫面繪製：背景、球場、氣球、瞄準線、HUD、得分跳字、結算畫面 */
 export class Renderer {
   private ctx: CanvasRenderingContext2D;
 
-  constructor(private cv: HTMLCanvasElement) {
+  constructor(
+    private cv: HTMLCanvasElement,
+    private result: ResultText = {
+      line1: CONFIG.RESULT.title,
+      line2: `{{score}}${CONFIG.RESULT.unit}`,
+    },
+  ) {
     this.ctx = cv.getContext('2d')!;
     this.fit();
     addEventListener('resize', () => this.fit());
@@ -256,6 +267,15 @@ export class Renderer {
     c.font = 'bold 15px sans-serif';
     c.fillText('+', 108, 25);
 
+    c.fillStyle = 'rgba(255,255,255,.72)';
+    c.beginPath();
+    c.roundRect(8, 48, 122, 24, 12);
+    c.fill();
+    c.fillStyle = '#7a2a52';
+    c.font = 'bold 10px sans-serif';
+    c.textAlign = 'left';
+    c.fillText('＋ 製作專屬版本', 15, 60);
+
     // 得分跳字：碰撞點左側，約 1 秒內上浮並淡出（左側放不下時改放右側）
     for (const o of g.pops) {
       const e = 1 - Math.pow(1 - o.t, 2);
@@ -273,8 +293,10 @@ export class Renderer {
     if (g.state === 'over') {
       c.fillStyle = 'rgba(40,10,30,.6)';
       c.fillRect(0, 0, W, H);
-      this.text(CONFIG.RESULT.title, W / 2, 250, 36, 'center');
-      this.text(g.score.toLocaleString('en-US') + CONFIG.RESULT.unit, W / 2, 310, 28, 'center');
+      const score = g.score.toLocaleString('en-US');
+      const line2 = this.result.line2.replace(/\{\{score\}\}/g, score);
+      this.fitCenteredText(this.result.line1, W / 2, 250, 36, W - 32);
+      this.fitCenteredText(line2, W / 2, 310, 28, W - 32);
       c.fillStyle = '#fff';
       c.beginPath();
       c.roundRect(110, 350, 140, 44, 22);
@@ -285,5 +307,16 @@ export class Renderer {
       c.textBaseline = 'middle';
       c.fillText('重新開始', W / 2, 372);
     }
+  }
+
+  private fitCenteredText(text: string, x: number, y: number, size: number, maxWidth: number) {
+    const c = this.ctx;
+    let fitted = size;
+    c.font = `800 ${fitted}px ${FONT}`;
+    while (fitted > 14 && c.measureText(text).width > maxWidth) {
+      fitted--;
+      c.font = `800 ${fitted}px ${FONT}`;
+    }
+    this.text(text, x, y, fitted, 'center');
   }
 }

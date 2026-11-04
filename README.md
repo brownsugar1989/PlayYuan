@@ -1,8 +1,3 @@
-# PlayYuan
-It's the place to store some small, customized games
-
----
-
 # 推推合成球
 
 類似 Suika Game 的合成遊戲，把「垂直掉落」改成「水平推移」：從手機底部左右選位置、放開發射，氣球往遠端牆滑行，同級相撞會合成更高一級。
@@ -16,6 +11,7 @@ It's the place to store some small, customized games
 |---|---|
 | TypeScript + Vite 版 | `https://<你的帳號>.github.io/<儲存庫名>/` |
 | 單一 HTML 版 | `https://<你的帳號>.github.io/<儲存庫名>/standalone/` |
+| 客製化編輯器 | `https://<你的帳號>.github.io/<儲存庫名>/creator.html` |
 
 單一 HTML 版放在 `public/standalone/index.html`，不需要建置，內含背景圖，物理引擎從 CDN 載入。
 
@@ -33,20 +29,34 @@ npm run preview    # 預覽建置結果
 
 ## 遊戲中調整最高等級
 
-遊戲畫面左上方有「最高等級」控制器，按 **−** 或 **+** 可在 4 到 10 級之間調整。每次調整會重新開始本局；設定會保存在目前瀏覽器，下次開啟仍會使用。不同裝置或瀏覽器的設定彼此獨立。
+遊戲內建最高 10 級。遊戲畫面左上方有「最高級」控制器，玩家可以按 **−** 或 **+** 在 4 到 10 級之間調整本局上限，預設為第 5 級。每次調整會重新開始本局；偏好保存在目前瀏覽器，下次開啟仍會使用。
 
-預設值仍可在 `src/config.ts` 的 `CONFIG.MAX_LEVEL` 修改。
+開發者不需要指定等級上限；圖片欄位固定提供第 1 到第 10 級。
 
-## 開發者可以調整的設定
+## 客製化遊戲編輯器
 
-等級球圖片與結算文字在 `src/config.ts`：
+開啟 `creator.html` 後，可逐級選擇圖片。圖片只套用到指定等級；留空的等級使用預設顏色。結算文字有兩行，第二行使用 `{{score}}` 表示分數插入位置。完成預覽後可以生成、複製遊戲網址，也可以刪除自己建立的版本。
 
-1. **等級球圖片**：`CONFIG.BALL_IMAGES`。把圖片放進 `public/assets/balls/`，再填入對應等級，例如：
-   ```ts
-   BALL_IMAGES: { 1: 'assets/balls/1.webp', 2: 'assets/balls/2.webp' }
-   ```
-   沒填的等級使用預設顏色。有圖片的球會裁成圓形、不顯示等級數字，氣球結的顏色會自動取圖片底邊的顏色。
-2. **結算畫面文字**：`CONFIG.RESULT`（`title` 標題、`unit` 分數單位）。預設樣式是 `{ title: '遊戲結束', unit: '分' }`。
+照片在瀏覽器中縮小、移除原圖中常見的拍攝資訊後，以 AES-GCM 加密，再傳送到獨立儲存服務。公開 GitHub 儲存庫只包含程式碼，不會收到使用者的照片。解密金鑰放在分享網址的 `#` 片段中，瀏覽器不會把它傳給儲存 API；但收到完整網址的人仍能打開圖片，因此只分享給信任的人。客製版本預設保存 30 天，製作者可以提前刪除。
+
+### 啟用分享儲存服務
+
+編輯器前端由 GitHub Pages 提供；加密資料存放在 Cloudflare R2，由 `backend/worker.js` 存取。部署前需要一個 Cloudflare 帳號；從專案根目錄登入 Wrangler 並建立 R2 bucket：
+
+```bash
+cd backend
+npx wrangler login
+npx wrangler r2 bucket create playyuan-games
+npx wrangler deploy
+```
+
+部署後，在 GitHub 儲存庫 **Settings → Secrets and variables → Actions → Variables** 新增 `VITE_STORAGE_API_URL`，值填 Worker 的 `https://…workers.dev` 網址，再重新執行 Pages workflow。Worker 僅允許設定中的網站來源，保存密文 30 天，並提供持有刪除金鑰者刪除資料的 API。上線前也應在 Cloudflare 為 `POST /games/*` 設定每個來源 IP 的速率限制；CORS 只約束瀏覽器頁面，無法阻止直接呼叫 API 的程式。
+
+尚未設定 `VITE_STORAGE_API_URL` 時，編輯器可操作與預覽，但「生成網址」會提示儲存服務尚未設定。
+
+## 預設遊戲外觀
+
+內建預設球圖、結算文字及手感參數可以在 `src/config.ts` 編輯。客製化使用者圖片不會寫入這些檔案或 GitHub 儲存庫。
 
 手感參數（重力、發射速度、碰撞後滑動速度、結束判定時間…）在同一個檔案的 `TUNING`。
 
