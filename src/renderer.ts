@@ -13,6 +13,7 @@ export interface ResultText {
 /** 畫面繪製：背景、球場、氣球、瞄準線、HUD、得分跳字、結算畫面 */
 export class Renderer {
   private ctx: CanvasRenderingContext2D;
+  private resizeFrame = 0;
 
   constructor(
     private cv: HTMLCanvasElement,
@@ -23,19 +24,27 @@ export class Renderer {
   ) {
     this.ctx = cv.getContext('2d')!;
     this.fit();
-    addEventListener('resize', () => this.fit());
+    addEventListener('resize', this.scheduleFit);
+    addEventListener('orientationchange', this.scheduleFit);
+    window.visualViewport?.addEventListener('resize', this.scheduleFit);
   }
+
+  private scheduleFit = () => {
+    cancelAnimationFrame(this.resizeFrame);
+    this.resizeFrame = requestAnimationFrame(() => this.fit());
+  };
 
   /** 9:16 內部畫布等比縮放並考慮高解析度螢幕 */
   private fit() {
     const { W, H } = LAYOUT;
     const s = Math.min(innerWidth / W, innerHeight / H);
-    const d = devicePixelRatio || 1;
+    // Include visual viewport zoom so pinch-zoomed mobile canvases stay crisp.
+    const d = Math.min(4, Math.max(1, (window.devicePixelRatio || 1) * (window.visualViewport?.scale || 1)));
     this.cv.style.width = W * s + 'px';
     this.cv.style.height = H * s + 'px';
-    this.cv.width = Math.round(W * s * d);
-    this.cv.height = Math.round(H * s * d);
-    this.ctx.setTransform(s * d, 0, 0, s * d, 0, 0);
+    this.cv.width = Math.max(1, Math.ceil(W * s * d));
+    this.cv.height = Math.max(1, Math.ceil(H * s * d));
+    this.ctx.setTransform(this.cv.width / W, 0, 0, this.cv.height / H, 0, 0);
   }
 
   private text(s: string, x: number, y: number, size: number, align: CanvasTextAlign) {

@@ -27,7 +27,7 @@ export const TUNING = {
   overGraceSec: 1.2,       // 剛發射的球多久後開始計入結束判定
   overHoldSec: 0.5,        // 越線後多久再判定
   overFraction: 0.2,       // 越線面積超過這個比例才結束
-  radiusScale: 1.08,       // 所有球的半徑倍率
+  radiusScale: 1.296,      // 所有球在原尺寸上放大 1.2 倍
   r1: 14.4,                // 1 級球半徑
   rMaxSmall: 52,           // 最高等級 <= 6 時，最高級球半徑
   rMaxLarge: 72,           // 最高等級 >= 7 時，最高級球半徑
