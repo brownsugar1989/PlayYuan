@@ -13,7 +13,7 @@ function fromBase64Url(value: string) {
   return Uint8Array.from(bytes, (character) => character.charCodeAt(0));
 }
 
-function parseSharedGame(value: unknown): SharedGame {
+function parseSharedGame(value: unknown): Omit<SharedGame, 'id'> {
   if (!value || typeof value !== 'object') throw new Error('客製化設定格式錯誤。');
   const data = value as Record<string, unknown>;
   if (data.version !== 1 || !data.images || typeof data.images !== 'object') {
