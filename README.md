@@ -50,9 +50,9 @@ npx wrangler r2 bucket create playyuan-games
 npx wrangler deploy
 ```
 
-部署後，在 GitHub 儲存庫 **Settings → Secrets and variables → Actions → Variables** 新增 `VITE_STORAGE_API_URL`，值填 Worker 的 `https://…workers.dev` 網址，再重新執行 Pages workflow。Worker 僅允許設定中的網站來源，保存密文 30 天，並提供持有刪除金鑰者刪除資料的 API。上線前也應在 Cloudflare 為 `POST /games/*` 設定每個來源 IP 的速率限制；CORS 只約束瀏覽器頁面，無法阻止直接呼叫 API 的程式。
+GitHub Actions 已預設使用 `https://playyuan-game-storage.playyuan-game-api.workers.dev` 作為儲存 API。若你改用其他 Worker 網址，可在 GitHub 儲存庫 **Settings → Secrets and variables → Actions → Variables** 新增或更新 `VITE_STORAGE_API_URL`，再重新執行 Pages workflow。Worker 僅允許設定中的網站來源，保存密文 30 天，並提供持有刪除金鑰者刪除資料的 API。上線前也應在 Cloudflare 為 `POST /games/*` 設定每個來源 IP 的速率限制；CORS 只約束瀏覽器頁面，無法阻止直接呼叫 API 的程式。
 
-尚未設定 `VITE_STORAGE_API_URL` 時，編輯器可操作與預覽，但「生成網址」會提示儲存服務尚未設定。
+若 Worker 尚未部署或 `VITE_STORAGE_API_URL` 設定錯誤，編輯器可操作與預覽，但「生成網址」會顯示儲存服務錯誤。
 
 ## 預設遊戲外觀
 

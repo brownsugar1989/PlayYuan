@@ -18,7 +18,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      VITE_STORAGE_API_URL: ${{ vars.VITE_STORAGE_API_URL }}
+      VITE_STORAGE_API_URL: ${{ vars.VITE_STORAGE_API_URL || 'https://playyuan-game-storage.playyuan-game-api.workers.dev' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
