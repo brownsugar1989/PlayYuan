@@ -56,17 +56,89 @@ function validRecord(record) {
     typeof record.deleteTokenHash === 'string' && BASE64URL_PATTERN.test(record.deleteTokenHash) && record.deleteTokenHash.length === 43;
 }
 
+async function activeGame(env, id) {
+  const key = `games/${id}`;
+  const object = await env.GAMES.head(key);
+  if (!object) return 404;
+  if (Number(object.customMetadata?.expiresAt || 0) <= Date.now()) {
+    await env.GAMES.delete([key, `leaderboards/${id}`]);
+    return 410;
+  }
+  return 0;
+}
+
+async function readBestScore(env, key) {
+  const object = await env.GAMES.get(key);
+  if (!object) return 0;
+  try {
+    const data = await object.json();
+    return Number.isSafeInteger(data.bestScore) && data.bestScore >= 0 ? data.bestScore : 0;
+  } catch {
+    return 0;
+  }
+}
+
+async function submitBestScore(env, key, score) {
+  // Compare-and-swap prevents overlapping requests from replacing a higher score with a lower one.
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const current = await env.GAMES.get(key);
+    const bestScore = current ? await readBestScore(env, key) : 0;
+    if (score <= bestScore) return bestScore;
+    const options = current
+      ? { onlyIf: { etagMatches: current.etag } }
+      : { onlyIf: { etagDoesNotMatch: '*' } };
+    const written = await env.GAMES.put(key, JSON.stringify({ bestScore: score }), {
+      ...options,
+      httpMetadata: { contentType: 'application/json; charset=utf-8' },
+    });
+    if (written) return score;
+  }
+  throw new Error('Leaderboard update contention.');
+}
+
 export default {
   async fetch(request, env) {
     const origin = allowedOrigin(request, env);
     if (!origin) return new Response('Origin not allowed', { status: 403 });
     const url = new URL(request.url);
-    const match = url.pathname.match(/^\/games\/([a-f0-9]{32})$/i);
+    const match = url.pathname.match(/^\/games\/([a-f0-9]{32})(?:\/(leaderboard|score))?$/i);
     if (!match) return json({ error: 'Not found' }, 404, origin);
     const id = match[1].toLowerCase();
+    const subroute = (match[2] || '').toLowerCase();
     const key = `games/${id}`;
+    const leaderboardKey = `leaderboards/${id}`;
 
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: headersFor(origin) });
+
+    if (subroute === 'leaderboard') {
+      if (request.method !== 'GET') return json({ error: 'Method not allowed.' }, 405, origin);
+      const status = await activeGame(env, id);
+      if (status === 404) return json({ error: 'Game not found.' }, 404, origin);
+      if (status === 410) return json({ error: 'This game link has expired.' }, 410, origin);
+      return json({ bestScore: await readBestScore(env, leaderboardKey) }, 200, origin);
+    }
+
+    if (subroute === 'score') {
+      if (request.method !== 'POST') return json({ error: 'Method not allowed.' }, 405, origin);
+      const announcedLength = Number(request.headers.get('Content-Length') || 0);
+      if (announcedLength > 128) return json({ error: 'Score request is too large.' }, 413, origin);
+      const bodyText = await request.text();
+      if (new TextEncoder().encode(bodyText).byteLength > 128) return json({ error: 'Score request is too large.' }, 413, origin);
+      let body;
+      try { body = JSON.parse(bodyText); } catch { return json({ error: 'Invalid score.' }, 400, origin); }
+      const score = body?.score;
+      if (!Number.isSafeInteger(score) || score < 0) return json({ error: 'Invalid score.' }, 400, origin);
+      const status = await activeGame(env, id);
+      if (status === 404) return json({ error: 'Game not found.' }, 404, origin);
+      if (status === 410) return json({ error: 'This game link has expired.' }, 410, origin);
+      try {
+        return json({ bestScore: await submitBestScore(env, leaderboardKey, score) }, 200, origin);
+      } catch {
+        return json({ error: 'Could not update the leaderboard. Please retry.' }, 503, origin);
+      }
+    }
+
+    if (subroute) return json({ error: 'Not found' }, 404, origin);
 
     if (request.method === 'POST') {
       const announcedLength = Number(request.headers.get('Content-Length') || 0);
@@ -90,7 +162,7 @@ export default {
       const object = await env.GAMES.get(key);
       if (!object) return json({ error: 'Game not found.' }, 404, origin);
       if (Number(object.customMetadata?.expiresAt || 0) <= Date.now()) {
-        await env.GAMES.delete(key);
+        await env.GAMES.delete([key, leaderboardKey]);
         return json({ error: 'This game link has expired.' }, 410, origin);
       }
       const headers = headersFor(origin);
@@ -106,6 +178,7 @@ export default {
         return json({ error: 'Delete token is invalid.' }, 403, origin);
       }
       await env.GAMES.delete(key);
+      await env.GAMES.delete(leaderboardKey);
       return new Response(null, { status: 204, headers: headersFor(origin) });
     }
 
@@ -117,8 +190,13 @@ export default {
       let cursor;
       do {
         const page = await env.GAMES.list({ prefix: 'games/', limit: 1000, cursor });
-        const expired = page.objects.filter((object) => Number(object.customMetadata?.expiresAt || 0) <= Date.now()).map((object) => object.key);
-        if (expired.length) await env.GAMES.delete(expired);
+        const expiredIds = page.objects
+          .filter((object) => Number(object.customMetadata?.expiresAt || 0) <= Date.now())
+          .map((object) => object.key.slice('games/'.length));
+        if (expiredIds.length) {
+          const keys = expiredIds.flatMap((id) => [`games/${id}`, `leaderboards/${id}`]);
+          await env.GAMES.delete(keys);
+        }
         cursor = page.truncated ? page.cursor : undefined;
       } while (cursor);
     })());

@@ -14,6 +14,8 @@ export interface ResultText {
 export class Renderer {
   private ctx: CanvasRenderingContext2D;
   private resizeFrame = 0;
+  private bestScore: number | null = null;
+  private leaderboardError = false;
 
   constructor(
     private cv: HTMLCanvasElement,
@@ -21,12 +23,22 @@ export class Renderer {
       line1: CONFIG.RESULT.title,
       line2: `{{score}}${CONFIG.RESULT.unit}`,
     },
+    private leaderboardEnabled = false,
   ) {
     this.ctx = cv.getContext('2d')!;
     this.fit();
     addEventListener('resize', this.scheduleFit);
     addEventListener('orientationchange', this.scheduleFit);
     window.visualViewport?.addEventListener('resize', this.scheduleFit);
+  }
+
+  setBestScore(score: number) {
+    this.bestScore = score;
+    this.leaderboardError = false;
+  }
+
+  setLeaderboardError() {
+    this.leaderboardError = true;
   }
 
   private scheduleFit = () => {
@@ -336,6 +348,14 @@ export class Renderer {
       c.textAlign = 'center';
       c.textBaseline = 'middle';
       c.fillText('重新開始', W / 2, 372);
+      if (this.leaderboardEnabled) {
+        const rankText = this.leaderboardError
+          ? '最高分暫時無法載入'
+          : this.bestScore === null
+            ? '排名讀取中…'
+            : `目前最高得主擁有 ${this.bestScore.toLocaleString('en-US')} 分`;
+        this.fitCenteredText(rankText, W / 2, 425, 16, W - 28);
+      }
     }
   }
 

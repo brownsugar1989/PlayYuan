@@ -5,6 +5,7 @@ import { bindInput } from './input';
 import { Renderer } from './renderer';
 import { setCustomBallImages } from './assets';
 import { loadSharedGame } from './share';
+import { getBestScore, submitScore } from './leaderboard';
 
 const cv = document.getElementById('c') as HTMLCanvasElement;
 const bg = document.getElementById('bg') as HTMLDivElement;
@@ -15,7 +16,13 @@ async function start() {
   const customization = await loadSharedGame();
   if (customization) setCustomBallImages(customization.images);
   const game = new Game();
-  const renderer = new Renderer(cv, customization?.result);
+  const renderer = new Renderer(cv, customization?.result, Boolean(customization?.id));
+
+  if (customization?.id) {
+    void getBestScore(customization.id)
+      .then((score) => renderer.setBestScore(score))
+      .catch(() => renderer.setLeaderboardError());
+  }
 
   bindInput(cv, {
     onDown: (x, y) => {
@@ -45,10 +52,17 @@ async function start() {
   });
 
   let last = performance.now();
+  let previousState = game.state;
   function loop(now: number) {
     const dt = Math.min(50, now - last);
     last = now;
     game.update(dt);
+    if (game.state === 'over' && previousState !== 'over' && customization?.id) {
+      void submitScore(customization.id, game.score)
+        .then((score) => renderer.setBestScore(score))
+        .catch(() => renderer.setLeaderboardError());
+    }
+    previousState = game.state;
     renderer.draw(game);
     requestAnimationFrame(loop);
   }

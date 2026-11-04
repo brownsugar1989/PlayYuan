@@ -2,6 +2,7 @@ import { STORAGE_API_URL } from './storage-config';
 import type { ResultText } from './renderer';
 
 export interface SharedGame {
+  id: string;
   images: Record<number, string>;
   result: ResultText;
 }
@@ -56,5 +57,5 @@ export async function loadSharedGame(): Promise<SharedGame | null> {
     key,
     fromBase64Url(record.ciphertext),
   );
-  return parseSharedGame(JSON.parse(new TextDecoder().decode(plaintext)));
+  return { ...parseSharedGame(JSON.parse(new TextDecoder().decode(plaintext))), id };
 }
