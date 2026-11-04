@@ -213,7 +213,14 @@ export class Renderer {
     }
 
     // HUD：分數（右上）、下一顆預覽（分數下方，最高等級 >= 8）
-    this.text('你有多棒: ' + g.score.toLocaleString('en-US'), X1, 26, 24, 'right');
+    const scoreText = '你有多棒: ' + g.score.toLocaleString('en-US');
+    let scoreSize = 24;
+    c.font = `800 ${scoreSize}px ${FONT}`;
+    while (scoreSize > 12 && c.measureText(scoreText).width > X1 - 138) {
+      scoreSize--;
+      c.font = `800 ${scoreSize}px ${FONT}`;
+    }
+    this.text(scoreText, X1, 26, scoreSize, 'right');
     if (showPreview(K)) {
       c.fillStyle = 'rgba(255,255,255,.4)';
       c.beginPath();
@@ -226,29 +233,28 @@ export class Renderer {
     // 最高等級控制：選擇會保存在目前瀏覽器
     c.fillStyle = 'rgba(255,255,255,.78)';
     c.beginPath();
-    c.roundRect(8, 10, 170, 32, 16);
+    c.roundRect(8, 10, 122, 30, 15);
     c.fill();
     c.fillStyle = '#7a2a52';
-    c.font = 'bold 11px sans-serif';
-    c.textAlign = 'center';
+    c.font = 'bold 10px sans-serif';
     c.textBaseline = 'middle';
     c.textAlign = 'left';
-    c.fillText('最高等級', 16, 26);
-    for (const [x, disabled] of [[77, K <= 4], [130, K >= 10]] as const) {
+    c.fillText('最高級', 13, 25);
+    for (const [x, disabled] of [[49, K <= 4], [98, K >= 10]] as const) {
       c.fillStyle = disabled ? 'rgba(122,42,82,.06)' : 'rgba(122,42,82,.12)';
       c.beginPath();
-      c.roundRect(x, 15, 24, 22, 11);
+      c.roundRect(x, 15, 20, 20, 10);
       c.fill();
     }
     c.fillStyle = K <= 4 ? 'rgba(122,42,82,.4)' : '#7a2a52';
     c.textAlign = 'center';
     c.font = 'bold 15px sans-serif';
-    c.fillText('−', 89, 26);
+    c.fillText('−', 59, 25);
     c.font = 'bold 13px sans-serif';
-    c.fillText(String(K), 116, 26);
+    c.fillText(String(K), 83, 25);
     c.fillStyle = K >= 10 ? 'rgba(122,42,82,.4)' : '#7a2a52';
     c.font = 'bold 15px sans-serif';
-    c.fillText('+', 142, 26);
+    c.fillText('+', 108, 25);
 
     // 得分跳字：碰撞點左側，約 1 秒內上浮並淡出（左側放不下時改放右側）
     for (const o of g.pops) {
