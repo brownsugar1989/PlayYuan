@@ -18,7 +18,11 @@ bindInput(cv, {
       if (x > 110 && x < 250 && y > 350 && y < 394) game.reset();
       return false;
     }
-    if (x < 80 && y < 48) { game.cycleLevel(); return false; }
+    if (x >= 8 && x <= 178 && y >= 10 && y <= 42) {
+      if (x >= 77 && x <= 103) game.adjustMaxLevel(-1);
+      else if (x >= 130 && x <= 156) game.adjustMaxLevel(1);
+      return false;
+    }
     game.launcher.dragging = true;
     game.launcher.x = x;
     return true;

@@ -31,21 +31,24 @@ npm run build      # 建置到 dist/
 npm run preview    # 預覽建置結果
 ```
 
-## 開發者可以調整的三個模組
+## 遊戲中調整最高等級
 
-全部在 `src/config.ts`：
+遊戲畫面左上方有「最高等級」控制器，按 **−** 或 **+** 可在 4 到 10 級之間調整。每次調整會重新開始本局；設定會保存在目前瀏覽器，下次開啟仍會使用。不同裝置或瀏覽器的設定彼此獨立。
 
-1. **最高等級**：`CONFIG.MAX_LEVEL`（4 ~ 10）
-2. **等級球圖片**：`CONFIG.BALL_IMAGES`。把圖片放進 `public/assets/balls/`，再填入對應等級，例如：
+預設值仍可在 `src/config.ts` 的 `CONFIG.MAX_LEVEL` 修改。
+
+## 開發者可以調整的設定
+
+等級球圖片與結算文字在 `src/config.ts`：
+
+1. **等級球圖片**：`CONFIG.BALL_IMAGES`。把圖片放進 `public/assets/balls/`，再填入對應等級，例如：
    ```ts
    BALL_IMAGES: { 1: 'assets/balls/1.webp', 2: 'assets/balls/2.webp' }
    ```
    沒填的等級使用預設顏色。有圖片的球會裁成圓形、不顯示等級數字，氣球結的顏色會自動取圖片底邊的顏色。
-3. **結算畫面文字**：`CONFIG.RESULT`（`title` 標題、`unit` 分數單位）。預設樣式是 `{ title: '遊戲結束', unit: '分' }`。
+2. **結算畫面文字**：`CONFIG.RESULT`（`title` 標題、`unit` 分數單位）。預設樣式是 `{ title: '遊戲結束', unit: '分' }`。
 
 手感參數（重力、發射速度、碰撞後滑動速度、結束判定時間…）在同一個檔案的 `TUNING`。
-
-左上角的「Lv」按鈕是測試用，會在 4 ~ 10 級之間切換；正式上線前可以到 `src/main.ts` 和 `src/renderer.ts` 移除。
 
 ## 程式結構
 

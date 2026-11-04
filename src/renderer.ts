@@ -223,16 +223,32 @@ export class Renderer {
       this.ball(g.launcher.next, 326, 70, r * Math.min(1, 22 / r), K);
     }
 
-    // 測試用：左上角等級切換按鈕
-    c.fillStyle = 'rgba(255,255,255,.55)';
+    // 最高等級控制：選擇會保存在目前瀏覽器
+    c.fillStyle = 'rgba(255,255,255,.78)';
     c.beginPath();
-    c.roundRect(8, 10, 64, 28, 14);
+    c.roundRect(8, 10, 170, 32, 16);
     c.fill();
     c.fillStyle = '#7a2a52';
-    c.font = 'bold 14px sans-serif';
+    c.font = 'bold 11px sans-serif';
     c.textAlign = 'center';
     c.textBaseline = 'middle';
-    c.fillText('Lv ' + K, 40, 24);
+    c.textAlign = 'left';
+    c.fillText('最高等級', 16, 26);
+    for (const [x, disabled] of [[77, K <= 4], [130, K >= 10]] as const) {
+      c.fillStyle = disabled ? 'rgba(122,42,82,.06)' : 'rgba(122,42,82,.12)';
+      c.beginPath();
+      c.roundRect(x, 15, 24, 22, 11);
+      c.fill();
+    }
+    c.fillStyle = K <= 4 ? 'rgba(122,42,82,.4)' : '#7a2a52';
+    c.textAlign = 'center';
+    c.font = 'bold 15px sans-serif';
+    c.fillText('−', 89, 26);
+    c.font = 'bold 13px sans-serif';
+    c.fillText(String(K), 116, 26);
+    c.fillStyle = K >= 10 ? 'rgba(122,42,82,.4)' : '#7a2a52';
+    c.font = 'bold 15px sans-serif';
+    c.fillText('+', 142, 26);
 
     // 得分跳字：碰撞點左側，約 1 秒內上浮並淡出（左側放不下時改放右側）
     for (const o of g.pops) {
