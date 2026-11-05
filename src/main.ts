@@ -18,8 +18,7 @@ function showSharpnessDiagnostics() {
   if (!params.has('sharpness')) return;
   const rasterSnapshot = params.has('raster');
   const freezeAfterFirstFrame = params.has('freeze') || rasterSnapshot;
-  const pixelatedCanvas = params.has('pixelated');
-  if (pixelatedCanvas) cv.style.imageRendering = 'pixelated';
+  const refreshCanvasLayer = params.has('refresh');
 
   const panel = document.createElement('pre');
   panel.setAttribute('aria-label', '畫面清晰度診斷資訊');
@@ -38,7 +37,7 @@ function showSharpnessDiagnostics() {
     const visual = window.visualViewport;
     panel.textContent = [
       'SHARPNESS CHECK',
-      'render ' + (rasterSnapshot ? 'PNG snapshot' : pixelatedCanvas ? 'pixelated canvas' : freezeAfterFirstFrame ? 'single frame (frozen)' : 'continuous'),
+      'render ' + (rasterSnapshot ? 'PNG snapshot' : refreshCanvasLayer ? 'layer refresh' : freezeAfterFirstFrame ? 'single frame (frozen)' : 'continuous'),
       `DPR ${dpr} | page zoom ${visual?.scale ?? 1}`,
       `screen ${screen.width}×${screen.height}`,
       `viewport ${innerWidth}×${innerHeight}`,
@@ -102,8 +101,11 @@ async function start() {
 
   let last = performance.now();
   let previousState = game.state;
-  const rasterSnapshot = new URLSearchParams(location.search).has('raster');
-  const freezeAfterFirstFrame = new URLSearchParams(location.search).has('freeze') || rasterSnapshot;
+  const diagnosticParams = new URLSearchParams(location.search);
+  const rasterSnapshot = diagnosticParams.has('raster');
+  const freezeAfterFirstFrame = diagnosticParams.has('freeze') || rasterSnapshot;
+  const refreshCanvasLayer = diagnosticParams.has('refresh');
+  let canvasLayerRefreshed = false;
   let rasterSnapshotCreated = false;
   function loop(now: number) {
     const dt = Math.min(50, now - last);
@@ -125,6 +127,17 @@ async function start() {
     }
     previousState = game.state;
     renderer.draw(game);
+    if (refreshCanvasLayer && !canvasLayerRefreshed) {
+      canvasLayerRefreshed = true;
+      cv.style.display = 'none';
+      void cv.offsetHeight;
+      requestAnimationFrame(() => {
+        cv.style.display = '';
+        void cv.offsetHeight;
+        requestAnimationFrame(loop);
+      });
+      return;
+    }
     if (rasterSnapshot && !rasterSnapshotCreated) {
       rasterSnapshotCreated = true;
       const rect = cv.getBoundingClientRect();
