@@ -16,7 +16,8 @@ bg.style.backgroundImage = `url(${import.meta.env.BASE_URL}${BG_IMAGE})`;
 function showSharpnessDiagnostics() {
   const params = new URLSearchParams(location.search);
   if (!params.has('sharpness')) return;
-  const freezeAfterFirstFrame = params.has('freeze');
+  const rasterSnapshot = params.has('raster');
+  const freezeAfterFirstFrame = params.has('freeze') || rasterSnapshot;
 
   const panel = document.createElement('pre');
   panel.setAttribute('aria-label', '畫面清晰度診斷資訊');
@@ -35,7 +36,7 @@ function showSharpnessDiagnostics() {
     const visual = window.visualViewport;
     panel.textContent = [
       'SHARPNESS CHECK',
-      `render ${freezeAfterFirstFrame ? 'single frame (frozen)' : 'continuous'}`,
+      'render ' + (rasterSnapshot ? 'PNG snapshot' : freezeAfterFirstFrame ? 'single frame (frozen)' : 'continuous'),
       `DPR ${dpr} | page zoom ${visual?.scale ?? 1}`,
       `screen ${screen.width}×${screen.height}`,
       `viewport ${innerWidth}×${innerHeight}`,
@@ -99,7 +100,9 @@ async function start() {
 
   let last = performance.now();
   let previousState = game.state;
-  const freezeAfterFirstFrame = new URLSearchParams(location.search).has('freeze');
+  const rasterSnapshot = new URLSearchParams(location.search).has('raster');
+  const freezeAfterFirstFrame = new URLSearchParams(location.search).has('freeze') || rasterSnapshot;
+  let rasterSnapshotCreated = false;
   function loop(now: number) {
     const dt = Math.min(50, now - last);
     last = now;
@@ -120,6 +123,23 @@ async function start() {
     }
     previousState = game.state;
     renderer.draw(game);
+    if (rasterSnapshot && !rasterSnapshotCreated) {
+      rasterSnapshotCreated = true;
+      const rect = cv.getBoundingClientRect();
+      const snapshot = document.createElement('img');
+      snapshot.alt = 'Canvas PNG 快照比較';
+      snapshot.src = cv.toDataURL('image/png');
+      Object.assign(snapshot.style, {
+        position: 'fixed',
+        left: rect.left + 'px',
+        top: rect.top + 'px',
+        width: rect.width + 'px',
+        height: rect.height + 'px',
+        zIndex: '2',
+      });
+      document.body.append(snapshot);
+      cv.style.visibility = 'hidden';
+    }
     if (!freezeAfterFirstFrame) requestAnimationFrame(loop);
   }
   requestAnimationFrame(loop);
