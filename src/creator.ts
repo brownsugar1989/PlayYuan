@@ -145,7 +145,7 @@ function blobToDataUrl(blob: Blob): Promise<string> {
 async function compressImage(file: Blob) {
   const bitmap = await createImageBitmap(file);
   try {
-    const scale = Math.min(1, 512 / Math.max(bitmap.width, bitmap.height));
+    const scale = Math.min(1, 1024 / Math.max(bitmap.width, bitmap.height));
     const canvas = document.createElement('canvas');
     canvas.width = Math.max(1, Math.round(bitmap.width * scale));
     canvas.height = Math.max(1, Math.round(bitmap.height * scale));
@@ -153,7 +153,7 @@ async function compressImage(file: Blob) {
     if (!context) throw new Error('無法處理圖片。');
     context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
     const blob = await new Promise<Blob>((resolve, reject) => {
-      canvas.toBlob((value) => value ? resolve(value) : reject(new Error('圖片壓縮失敗。')), 'image/webp', 0.82);
+      canvas.toBlob((value) => value ? resolve(value) : reject(new Error('圖片壓縮失敗。')), 'image/webp', 0.9);
     });
     return await blobToDataUrl(blob);
   } finally {
