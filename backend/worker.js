@@ -12,6 +12,15 @@ function validMaxLevel(value) {
   return Number.isInteger(value) && value >= 4 && value <= 10;
 }
 
+function gameExpired(object) {
+  const storedExpiry = Number(object.customMetadata?.expiresAt);
+  const uploadedAt = object.uploaded instanceof Date ? object.uploaded.getTime() : NaN;
+  const expiresAt = Number.isFinite(storedExpiry) && storedExpiry > 0
+    ? storedExpiry
+    : Number.isFinite(uploadedAt) ? uploadedAt + RETENTION_MS : Infinity;
+  return expiresAt <= Date.now();
+}
+
 function allowedOrigin(request, env) {
   const origin = request.headers.get('Origin') || '';
   const allowed = (env.ALLOWED_ORIGINS || '').split(',').map((value) => value.trim());
@@ -69,7 +78,7 @@ async function activeGame(env, id) {
   const key = `games/${id}`;
   const object = await env.GAMES.head(key);
   if (!object) return 404;
-  if (Number(object.customMetadata?.expiresAt || 0) <= Date.now()) {
+  if (gameExpired(object)) {
     await env.GAMES.delete([key, ...leaderboardKeys(id)]);
     return 410;
   }
@@ -172,7 +181,7 @@ export default {
     if (request.method === 'GET') {
       const object = await env.GAMES.get(key);
       if (!object) return json({ error: 'Game not found.' }, 404, origin);
-      if (Number(object.customMetadata?.expiresAt || 0) <= Date.now()) {
+      if (gameExpired(object)) {
         await env.GAMES.delete([key, ...leaderboardKeys(id)]);
         return json({ error: 'This game link has expired.' }, 410, origin);
       }
@@ -200,9 +209,9 @@ export default {
     ctx.waitUntil((async () => {
       let cursor;
       do {
-        const page = await env.GAMES.list({ prefix: 'games/', limit: 1000, cursor });
+        const page = await env.GAMES.list({ prefix: 'games/', limit: 1000, cursor, include: ['customMetadata'] });
         const expiredIds = page.objects
-          .filter((object) => Number(object.customMetadata?.expiresAt || 0) <= Date.now())
+          .filter(gameExpired)
           .map((object) => object.key.slice('games/'.length));
         if (expiredIds.length) {
           const keys = expiredIds.flatMap((id) => [`games/${id}`, ...leaderboardKeys(id)]);
