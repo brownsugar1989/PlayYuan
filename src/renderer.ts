@@ -55,7 +55,7 @@ export class Renderer {
     // Use the device pixel ratio directly. visualViewport.scale describes page zoom,
     // which can differ between links and otherwise reduce the canvas backing resolution.
     const touchScreen = window.matchMedia('(pointer: coarse)').matches;
-    const minimumDpr = touchScreen ? 2 : 1;
+    const minimumDpr = touchScreen ? 3 : 1;
     const d = Math.min(4, Math.max(minimumDpr, window.devicePixelRatio || 1));
     this.cv.style.width = W * s + 'px';
     this.cv.style.height = H * s + 'px';
