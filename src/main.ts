@@ -22,7 +22,7 @@ function showSharpnessDiagnostics() {
     position: 'fixed', right: '8px', bottom: '8px', zIndex: '9999',
     margin: '0', padding: '8px 10px', borderRadius: '8px',
     background: 'rgba(0,0,0,.82)', color: '#fff',
-    font: '12px/1.4 ui-monospace, monospace', whiteSpace: 'pre', pointerEvents: 'none',
+    font: '12px/1.4 ui-monospace, monospace', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere',\n    maxWidth: 'calc(100vw - 16px)', boxSizing: 'border-box', pointerEvents: 'none',
   });
   document.body.append(panel);
 
