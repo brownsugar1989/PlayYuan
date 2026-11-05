@@ -55,12 +55,22 @@ export class Renderer {
     // Use the device pixel ratio directly. visualViewport.scale describes page zoom,
     // which can differ between links and otherwise reduce the canvas backing resolution.
     const touchScreen = window.matchMedia('(pointer: coarse)').matches;
-    const minimumDpr = touchScreen ? 3 : 1;
-    const d = Math.min(4, Math.max(minimumDpr, window.devicePixelRatio || 1));
-    this.cv.style.width = W * s + 'px';
-    this.cv.style.height = H * s + 'px';
-    this.cv.width = Math.max(1, Math.ceil(W * s * d));
-    this.cv.height = Math.max(1, Math.ceil(H * s * d));
+    // Match the display's real pixel ratio; oversampling a DPR-2 iPhone creates
+    // a larger bitmap that Safari must resample back down, softening all content.
+    const d = Math.min(4, Math.max(touchScreen ? 2 : 1, window.devicePixelRatio || 1));
+    // Align both canvas edges to physical pixels. Fractional CSS positioning can
+    // make Safari resample the entire canvas, including text and the background.
+    const cssWidth = Math.round(W * s * d) / d;
+    const cssHeight = Math.round(H * s * d) / d;
+    const left = Math.round((viewportWidth - cssWidth) * d / 2) / d;
+    const top = Math.round((viewportHeight - cssHeight) * d / 2) / d;
+    this.cv.style.width = `${cssWidth}px`;
+    this.cv.style.height = `${cssHeight}px`;
+    this.cv.style.left = `${left}px`;
+    this.cv.style.top = `${top}px`;
+    this.cv.style.transform = 'none';
+    this.cv.width = Math.max(1, Math.round(cssWidth * d));
+    this.cv.height = Math.max(1, Math.round(cssHeight * d));
     this.ctx.setTransform(this.cv.width / W, 0, 0, this.cv.height / H, 0, 0);
   }
 
