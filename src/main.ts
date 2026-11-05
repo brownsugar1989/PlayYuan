@@ -14,7 +14,9 @@ bg.style.backgroundImage = `url(${import.meta.env.BASE_URL}${BG_IMAGE})`;
 
 /** Temporary on-device diagnostics; only visible with ?sharpness=1. */
 function showSharpnessDiagnostics() {
-  if (!new URLSearchParams(location.search).has('sharpness')) return;
+  const params = new URLSearchParams(location.search);
+  if (!params.has('sharpness')) return;
+  const freezeAfterFirstFrame = params.has('freeze');
 
   const panel = document.createElement('pre');
   panel.setAttribute('aria-label', '畫面清晰度診斷資訊');
@@ -33,6 +35,7 @@ function showSharpnessDiagnostics() {
     const visual = window.visualViewport;
     panel.textContent = [
       'SHARPNESS CHECK',
+      `render ${freezeAfterFirstFrame ? 'single frame (frozen)' : 'continuous'}`,
       `DPR ${dpr} | page zoom ${visual?.scale ?? 1}`,
       `screen ${screen.width}×${screen.height}`,
       `viewport ${innerWidth}×${innerHeight}`,
@@ -96,6 +99,7 @@ async function start() {
 
   let last = performance.now();
   let previousState = game.state;
+  const freezeAfterFirstFrame = new URLSearchParams(location.search).has('freeze');
   function loop(now: number) {
     const dt = Math.min(50, now - last);
     last = now;
@@ -116,7 +120,7 @@ async function start() {
     }
     previousState = game.state;
     renderer.draw(game);
-    requestAnimationFrame(loop);
+    if (!freezeAfterFirstFrame) requestAnimationFrame(loop);
   }
   requestAnimationFrame(loop);
 }
