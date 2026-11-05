@@ -12,11 +12,46 @@ const bg = document.getElementById('bg') as HTMLDivElement;
 // 畫布以外的空白處，用同一張背景放大模糊填滿
 bg.style.backgroundImage = `url(${import.meta.env.BASE_URL}${BG_IMAGE})`;
 
+/** Temporary on-device diagnostics; only visible with ?sharpness=1. */
+function showSharpnessDiagnostics() {
+  if (!new URLSearchParams(location.search).has('sharpness')) return;
+
+  const panel = document.createElement('pre');
+  panel.setAttribute('aria-label', '畫面清晰度診斷資訊');
+  Object.assign(panel.style, {
+    position: 'fixed', right: '8px', bottom: '8px', zIndex: '9999',
+    margin: '0', padding: '8px 10px', borderRadius: '8px',
+    background: 'rgba(0,0,0,.82)', color: '#fff',
+    font: '12px/1.4 ui-monospace, monospace', whiteSpace: 'pre', pointerEvents: 'none',
+  });
+  document.body.append(panel);
+
+  const update = () => {
+    const rect = cv.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const visual = window.visualViewport;
+    panel.textContent = [
+      'SHARPNESS CHECK',
+      `DPR ${dpr} | page zoom ${visual?.scale ?? 1}`,
+      `screen ${screen.width}×${screen.height}`,
+      `viewport ${innerWidth}×${innerHeight}`,
+      `visual ${visual?.width.toFixed(1) ?? '-'}×${visual?.height.toFixed(1) ?? '-'}`,
+      `canvas ${cv.width}×${cv.height}`,
+      `CSS ${rect.width.toFixed(2)}×${rect.height.toFixed(2)}`,
+      `bitmap/CSS ${(cv.width / rect.width).toFixed(2)}×${(cv.height / rect.height).toFixed(2)}`,
+    ].join('\\n');
+  };
+  update();
+  window.addEventListener('resize', update);
+  window.visualViewport?.addEventListener('resize', update);
+}
+
 async function start() {
   const customization = await loadSharedGame();
   if (customization) setCustomBallImages(customization.images);
   const game = new Game();
   const renderer = new Renderer(cv, customization?.result, Boolean(customization?.id));
+  showSharpnessDiagnostics();
 
   let leaderboardLevel = game.K;
   const refreshLeaderboard = (maxLevel: number) => {
