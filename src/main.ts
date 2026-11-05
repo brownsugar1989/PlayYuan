@@ -18,6 +18,8 @@ function showSharpnessDiagnostics() {
   if (!params.has('sharpness')) return;
   const rasterSnapshot = params.has('raster');
   const freezeAfterFirstFrame = params.has('freeze') || rasterSnapshot;
+  const pixelatedCanvas = params.has('pixelated');
+  if (pixelatedCanvas) cv.style.imageRendering = 'pixelated';
 
   const panel = document.createElement('pre');
   panel.setAttribute('aria-label', '畫面清晰度診斷資訊');
@@ -36,7 +38,7 @@ function showSharpnessDiagnostics() {
     const visual = window.visualViewport;
     panel.textContent = [
       'SHARPNESS CHECK',
-      'render ' + (rasterSnapshot ? 'PNG snapshot' : freezeAfterFirstFrame ? 'single frame (frozen)' : 'continuous'),
+      'render ' + (rasterSnapshot ? 'PNG snapshot' : pixelatedCanvas ? 'pixelated canvas' : freezeAfterFirstFrame ? 'single frame (frozen)' : 'continuous'),
       `DPR ${dpr} | page zoom ${visual?.scale ?? 1}`,
       `screen ${screen.width}×${screen.height}`,
       `viewport ${innerWidth}×${innerHeight}`,
